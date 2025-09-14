@@ -2,8 +2,8 @@ import { Request, Response } from "express-serve-static-core";
 import { PrismaClient } from "../../generated/prisma/index";
 const prisma = new PrismaClient();
 /**
- * @param request: clinnt Request
- * @param respones: clinnt Response
+ * @param request: client Request
+ * @param response: client Response
  * @returns Promise
  */
 export class BlogControler {
@@ -60,48 +60,50 @@ export class BlogControler {
     }
   }
   public async postBlog(request: Request, response: Response) {
-    const { description, title, authorId } = request.body;
-
-    if (!authorId) {
-      response.status(400).send({ message: "authorId is required" });
+    const { description, title } = request.body || {};
+    if (!title || !description) {
+      response
+        .status(400)
+        .send({
+          message: "Title and description are required and must be valid JSON.",
+        });
       return;
     }
-
     try {
       const blog = await prisma.blog.create({
         data: {
-          authorId,
           description,
           title,
         },
       });
-
       response.status(201).send({ message: "Blog created successfully", blog });
     } catch (error) {
       response.status(500).send({ message: "Internal server error", error });
     }
   }
   public async updateBlog(request: Request, response: Response) {
-    const { authorId, ...rest } = request.body;
     const blogId = request.params.id;
-
-    if (!authorId || !blogId) {
-      response
-        .status(400)
-        .send({ message: "authorId and valid blogId are required" });
+    const updateData = request.body || {};
+    if (!blogId) {
+      response.status(400).send({ message: "Valid blogId is required" });
       return;
     }
-
+    if (Object.keys(updateData).length === 0) {
+      response
+        .status(400)
+        .send({
+          message: "Request body must be valid JSON with fields to update.",
+        });
+      return;
+    }
     try {
       const updatedBlog = await prisma.blog.update({
         where: { id: blogId },
         data: {
-          authorId,
-          ...rest,
+          ...updateData,
           updatedAt: new Date(),
         },
       });
-
       response
         .status(200)
         .send({ message: "Blog updated successfully", blog: updatedBlog });

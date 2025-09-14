@@ -20,8 +20,6 @@ model Blog {
   updatedAt   DateTime @updatedAt
   description String
   title       String
-  author      user     @relation(fields: [authorId], references: [id])
-  authorId    String   @db.ObjectId
 }
 
 model user {
@@ -29,5 +27,4 @@ model user {
   email    String @unique
   name     String
   password String
-  blogs    Blog[]
 }
